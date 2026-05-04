@@ -41,6 +41,19 @@ const nearbyCountContainer = document.getElementById('nearbyCountContainer');
 const nearbyCountEl = document.getElementById('nearbyCount');
 const activeRadiusContainer = document.getElementById('activeRadiusContainer');
 
+// New DOM Elements for UI Refinement
+const sidebar = document.getElementById('sidebar');
+const sidebarToggleBtn = document.getElementById('sidebarToggleBtn');
+const mobileDragHandle = document.getElementById('mobileDragHandle');
+const sidebarHeader = document.getElementById('sidebarHeader');
+const sidebarTitleContainer = document.getElementById('sidebarTitleContainer');
+const mapRecenterBtn = document.getElementById('mapRecenterBtn');
+const recenterBtnContainer = document.getElementById('recenterBtnContainer');
+const sidebarChevronIcon = document.getElementById('sidebarChevronIcon');
+
+// UI State
+let isSidebarCollapsed = false;
+
 // --- Initialization ---
 async function init() {
     // 1. Initialize Map
@@ -162,12 +175,25 @@ function renderMarkers() {
         pointToLayer: function (feature, latlng) {
             return createCustomMarker(feature, latlng);
         },
+        style: function (feature) {
+            if (feature.geometry.type !== 'Point' && feature.geometry.type !== 'MultiPoint') {
+                return {
+                    color: '#94a3b8', // Light slate for polygons
+                    weight: 1.5,
+                    dashArray: '4, 4',
+                    fillColor: '#94a3b8',
+                    fillOpacity: 0.1
+                };
+            }
+        },
         onEachFeature: function (feature, layer) {
             bindPopupContent(feature, layer);
 
             // Interaction: Proximity Analysis
             layer.on('click', function (e) {
-                analyzeProximity(feature, latlngToCoords(e.latlng));
+                // If polygon, use click event latlng, if point use layer latlng
+                const centerCoord = feature.geometry.type === 'Point' ? latlngToCoords(layer.getLatLng()) : latlngToCoords(e.latlng);
+                analyzeProximity(feature, centerCoord);
             });
         }
     });
@@ -226,11 +252,11 @@ function analyzeProximity(centerFeature, centerCoords) {
     // 1. Draw 500m Buffer
     activeCircle = L.circle(centerCoords, {
         radius: RADIUS_METERS,
-        color: '#3b82f6',
-        fillColor: '#3b82f6',
-        fillOpacity: 0.1,
-        weight: 1,
-        dashArray: '5, 5'
+        color: '#94a3b8', // Consistent with polygon styling
+        fillColor: '#94a3b8',
+        fillOpacity: 0.05,
+        weight: 1.5,
+        dashArray: '4, 4'
     }).addTo(map);
 
     // 2. Use Turf.js to find points within buffer
@@ -336,6 +362,21 @@ function performSearch() {
     }
 }
 
+function checkMapCenter() {
+    const currentCenter = map.getCenter();
+    const seoulCenter = L.latLng(SEOUL_COORDS);
+    const dist = currentCenter.distanceTo(seoulCenter);
+    
+    // Show Recenter button if distance > 3000m or zoom differs significantly
+    if (dist > 3000 || Math.abs(map.getZoom() - DEFAULT_ZOOM) > 1) {
+        recenterBtnContainer.classList.remove('opacity-0', 'translate-y-4', 'pointer-events-none');
+        recenterBtnContainer.classList.add('opacity-100', 'translate-y-0', 'pointer-events-auto');
+    } else {
+        recenterBtnContainer.classList.add('opacity-0', 'translate-y-4', 'pointer-events-none');
+        recenterBtnContainer.classList.remove('opacity-100', 'translate-y-0', 'pointer-events-auto');
+    }
+}
+
 function setupEventListeners() {
     themeToggleBtn.addEventListener('click', toggleTheme);
 
@@ -350,17 +391,77 @@ function setupEventListeners() {
         if (e.key === 'Enter') performSearch();
     });
 
-    resetViewBtn.addEventListener('click', () => {
+    const resetMap = () => {
         map.flyTo(SEOUL_COORDS, DEFAULT_ZOOM, { duration: 1 });
         map.closePopup();
         clearHighlight();
-    });
+    };
+
+    resetViewBtn.addEventListener('click', resetMap);
+    mapRecenterBtn.addEventListener('click', resetMap);
+
+    map.on('moveend', checkMapCenter);
 
     // Clear highlight when popup is closed manually
     map.on('popupclose', function () {
         // Give it a tiny delay to prevent clearing if another popup is immediately opened
         setTimeout(clearHighlight, 100);
     });
+
+    // Sidebar Toggle Logic
+    const toggleSidebar = () => {
+        isSidebarCollapsed = !isSidebarCollapsed;
+        
+        if (isSidebarCollapsed) {
+            // Desktop Collapse
+            sidebar.classList.add('sm:-translate-x-full');
+            // Move toggle button outside
+            sidebarToggleBtn.classList.add('sm:absolute', 'sm:-right-[3.5rem]', 'sm:top-4', 'sm:bg-white', 'dark:sm:bg-gray-800', 'sm:shadow-xl', 'sm:border', 'sm:border-gray-200', 'dark:sm:border-gray-700', 'sm:rounded-xl', 'sm:p-3');
+            
+            // Mobile Collapse
+            sidebar.classList.add('translate-y-[calc(100%-4.5rem)]');
+            sidebar.classList.remove('translate-y-0');
+            
+            sidebarTitleContainer.classList.add('opacity-0', 'sm:opacity-100'); // Keep visible for desktop if needed, actually hide on mobile only? No, hide on both visually except icon.
+            
+            sidebarChevronIcon.setAttribute('data-lucide', 'menu');
+            lucide.createIcons();
+            
+        } else {
+            // Desktop Expand
+            sidebar.classList.remove('sm:-translate-x-full');
+            sidebarToggleBtn.classList.remove('sm:absolute', 'sm:-right-[3.5rem]', 'sm:top-4', 'sm:bg-white', 'dark:sm:bg-gray-800', 'sm:shadow-xl', 'sm:border', 'sm:border-gray-200', 'dark:sm:border-gray-700', 'sm:rounded-xl', 'sm:p-3');
+            
+            // Mobile Expand
+            sidebar.classList.remove('translate-y-[calc(100%-4.5rem)]');
+            sidebar.classList.add('translate-y-0');
+            
+            sidebarTitleContainer.classList.remove('opacity-0');
+            
+            sidebarChevronIcon.setAttribute('data-lucide', 'x');
+            lucide.createIcons();
+        }
+    };
+
+    sidebarToggleBtn.addEventListener('click', toggleSidebar);
+    if(mobileDragHandle) mobileDragHandle.addEventListener('click', toggleSidebar);
+    if(sidebarHeader) sidebarHeader.addEventListener('click', (e) => {
+        // Only toggle on mobile if clicking header
+        if(window.innerWidth < 640 && e.target !== themeToggleBtn && !themeToggleBtn.contains(e.target)) {
+            toggleSidebar();
+        }
+    });
+
+    // Initialize Sidebar State (Mobile collapsed by default, Desktop expanded)
+    if(window.innerWidth < 640) {
+        isSidebarCollapsed = true;
+        sidebarChevronIcon.setAttribute('data-lucide', 'menu');
+        sidebarTitleContainer.classList.add('opacity-0');
+    } else {
+        isSidebarCollapsed = false;
+        sidebarChevronIcon.setAttribute('data-lucide', 'x');
+    }
+    lucide.createIcons();
 }
 
 // Run app
