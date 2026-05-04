@@ -15,9 +15,10 @@ const tileLayers = {
 const tileAttribution = '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors &copy; <a href="https://carto.com/attributions">CARTO</a>';
 
 const categoryColors = {
-    'Manufacturing': '#ef4444', // Red
-    'Tech': '#3b82f6',          // Blue
-    'Logistics': '#10b981'      // Green
+    'Retail': '#ef4444',     // Red
+    'Amenities': '#3b82f6',  // Blue
+    'Land Use': '#10b981',   // Green
+    'Other': '#f59e0b'       // Orange
 };
 
 // Global State
@@ -41,7 +42,7 @@ const nearbyCountEl = document.getElementById('nearbyCount');
 const activeRadiusContainer = document.getElementById('activeRadiusContainer');
 
 // --- Initialization ---
-function init() {
+async function init() {
     // 1. Initialize Map
     map = L.map('map', {
         center: SEOUL_COORDS,
@@ -61,8 +62,15 @@ function init() {
 
     updateMapTiles();
 
-    // 3. Generate Mock Data
-    allFeatures = generateMockData(800);
+    // 3. Fetch Data
+    try {
+        const response = await fetch('./Seoul_Agriculture_District_geojson/Seoul_Agriculture_District.geojson');
+        const data = await response.json();
+        allFeatures = processFeatures(data.features);
+    } catch (error) {
+        console.error("Error loading geojson data:", error);
+        allFeatures = [];
+    }
 
     // 4. Initialize Marker Cluster
     markerCluster = L.markerClusterGroup({
@@ -70,7 +78,8 @@ function init() {
         maxClusterRadius: 50,
         spiderfyOnMaxZoom: true,
         showCoverageOnHover: false,
-        zoomToBoundsOnClick: true
+        zoomToBoundsOnClick: true,
+        disableClusteringAtZoom: 17
     });
 
     map.addLayer(markerCluster);
@@ -106,46 +115,33 @@ function toggleTheme() {
     // Leaflet popup class takes care of it via CSS variable override, no JS needed.
 }
 
-// --- Data Generation ---
-// Generate random points around Seoul
-function generateMockData(count) {
-    const features = [];
-    const categories = ['Manufacturing', 'Tech', 'Logistics'];
+// --- Data Processing ---
+function processFeatures(features) {
+    let idCounter = 0;
+    return features.map(f => {
+        let category = 'Other';
+        const props = f.properties;
 
-    // Seoul rough bounding box
-    const bounds = {
-        n: 37.65,
-        s: 37.45,
-        e: 127.15,
-        w: 126.80
-    };
+        if (props.shop) {
+            category = 'Retail';
+        } else if (props.amenity) {
+            category = 'Amenities';
+        } else if (props.landuse) {
+            category = 'Land Use';
+        }
 
-    const prefixes = ['Seoul', 'Global', 'Smart', 'Future', 'Korea', 'Metro', 'Prime', 'Apex'];
-    const suffixes = ['Corp', 'Inc', 'Solutions', 'Systems', 'Industries', 'Hub', 'Group'];
-
-    for (let i = 0; i < count; i++) {
-        const lat = bounds.s + Math.random() * (bounds.n - bounds.s);
-        const lng = bounds.w + Math.random() * (bounds.e - bounds.w);
-        const category = categories[Math.floor(Math.random() * categories.length)];
-
-        const name = `${prefixes[Math.floor(Math.random() * prefixes.length)]} ${category} ${suffixes[Math.floor(Math.random() * suffixes.length)]}`;
-
-        features.push({
+        return {
             type: 'Feature',
             properties: {
-                id: i,
-                name: name,
+                id: props.osm_id || idCounter++,
+                name: props.name || props.shop || props.amenity || props.landuse || 'Unknown',
                 category: category,
-                score: Math.floor(Math.random() * 100)
+                originalProps: props,
+                score: Math.floor(Math.random() * 100) // keeping mock score for demo UI
             },
-            geometry: {
-                type: 'Point',
-                coordinates: [lng, lat]
-            }
-        });
-    }
-
-    return features;
+            geometry: f.geometry
+        };
+    });
 }
 
 // --- Rendering Logic ---
@@ -185,26 +181,15 @@ function renderMarkers() {
 function createCustomMarker(feature, latlng) {
     const color = categoryColors[feature.properties.category];
 
-    const markerHtml = `
-        <div style="
-            background-color: ${color};
-            width: 14px;
-            height: 14px;
-            border-radius: 50%;
-            border: 2px solid white;
-            box-shadow: 0 0 4px rgba(0,0,0,0.4);
-            transition: all 0.2s ease;
-        "></div>
-    `;
-
-    const icon = L.divIcon({
-        html: markerHtml,
-        className: 'custom-div-icon',
-        iconSize: [14, 14],
-        iconAnchor: [7, 7]
+    // Using circleMarker for efficient data rendering on large datasets
+    return L.circleMarker(latlng, {
+        radius: 6,
+        fillColor: color,
+        color: '#ffffff',
+        weight: 1.5,
+        opacity: 1,
+        fillOpacity: 0.8
     });
-
-    return L.marker(latlng, { icon: icon });
 }
 
 function bindPopupContent(feature, layer) {
@@ -274,14 +259,14 @@ function analyzeProximity(centerFeature, centerCoords) {
         if (layer.feature) {
             const isNearby = nearbyFeatures.some(f => f.properties.id === layer.feature.properties.id);
             if (isNearby && layer.feature.properties.id !== centerFeature.properties.id) {
-
-                // Add highlight pulse animation class
-                const el = layer.getElement();
-                if (el && el.firstElementChild) {
-                    el.firstElementChild.style.boxShadow = `0 0 0 4px rgba(59, 130, 246, 0.4)`;
-                    el.firstElementChild.style.transform = 'scale(1.2)';
-                    activeHighlights.push({ layer: layer, originalStyle: el.firstElementChild.style.cssText });
-                }
+                // Add highlight pulse animation style for circleMarker
+                activeHighlights.push({ layer: layer, originalStyle: { ...layer.options } });
+                layer.setStyle({
+                    color: '#3b82f6',
+                    weight: 3,
+                    radius: 8,
+                    fillOpacity: 1
+                });
             }
         }
     });
@@ -302,11 +287,7 @@ function clearHighlight() {
     }
 
     activeHighlights.forEach(item => {
-        const el = item.layer.getElement();
-        if (el && el.firstElementChild) {
-            el.firstElementChild.style.boxShadow = '0 0 4px rgba(0,0,0,0.4)';
-            el.firstElementChild.style.transform = 'scale(1)';
-        }
+        item.layer.setStyle(item.originalStyle);
     });
     activeHighlights = [];
 

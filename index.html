@@ -4,7 +4,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Seoul Industrial Density Analysis</title>
+    <title>Seoul Agriculture & Amenities Analysis</title>
 
     <!-- Google Fonts -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -70,7 +70,7 @@
                         class="text-xl font-bold bg-gradient-to-r from-blue-600 to-indigo-600 dark:from-blue-400 dark:to-indigo-400 bg-clip-text text-transparent">
                         Seoul WebGIS</h1>
                     <p class="text-xs text-gray-500 dark:text-gray-400 font-medium tracking-wide uppercase mt-1">
-                        Industrial Density Analysis</p>
+                        Agriculture & Amenities Analysis</p>
                 </div>
 
                 <!-- Theme Toggle Button -->
@@ -111,27 +111,35 @@
                         <!-- Filters populated by JS -->
                         <label
                             class="flex items-center gap-3 p-2 rounded-lg hover:bg-white/50 dark:hover:bg-gray-800/50 transition-colors cursor-pointer border border-transparent hover:border-gray-200/50 dark:hover:border-gray-700/50">
-                            <input type="checkbox" value="Manufacturing"
+                            <input type="checkbox" value="Retail"
                                 class="category-filter w-4 h-4 text-blue-500 rounded border-gray-300 focus:ring-blue-500 dark:border-gray-600 dark:bg-gray-700"
                                 checked>
                             <div class="w-3 h-3 rounded-full bg-[#ef4444]"></div>
-                            <span class="text-sm font-medium">Manufacturing</span>
+                            <span class="text-sm font-medium">Retail</span>
                         </label>
                         <label
                             class="flex items-center gap-3 p-2 rounded-lg hover:bg-white/50 dark:hover:bg-gray-800/50 transition-colors cursor-pointer border border-transparent hover:border-gray-200/50 dark:hover:border-gray-700/50">
-                            <input type="checkbox" value="Tech"
+                            <input type="checkbox" value="Amenities"
                                 class="category-filter w-4 h-4 text-blue-500 rounded border-gray-300 focus:ring-blue-500 dark:border-gray-600 dark:bg-gray-700"
                                 checked>
                             <div class="w-3 h-3 rounded-full bg-[#3b82f6]"></div>
-                            <span class="text-sm font-medium">Tech / IT</span>
+                            <span class="text-sm font-medium">Amenities</span>
                         </label>
                         <label
                             class="flex items-center gap-3 p-2 rounded-lg hover:bg-white/50 dark:hover:bg-gray-800/50 transition-colors cursor-pointer border border-transparent hover:border-gray-200/50 dark:hover:border-gray-700/50">
-                            <input type="checkbox" value="Logistics"
+                            <input type="checkbox" value="Land Use"
                                 class="category-filter w-4 h-4 text-blue-500 rounded border-gray-300 focus:ring-blue-500 dark:border-gray-600 dark:bg-gray-700"
                                 checked>
                             <div class="w-3 h-3 rounded-full bg-[#10b981]"></div>
-                            <span class="text-sm font-medium">Logistics</span>
+                            <span class="text-sm font-medium">Land Use</span>
+                        </label>
+                        <label
+                            class="flex items-center gap-3 p-2 rounded-lg hover:bg-white/50 dark:hover:bg-gray-800/50 transition-colors cursor-pointer border border-transparent hover:border-gray-200/50 dark:hover:border-gray-700/50">
+                            <input type="checkbox" value="Other"
+                                class="category-filter w-4 h-4 text-blue-500 rounded border-gray-300 focus:ring-blue-500 dark:border-gray-600 dark:bg-gray-700"
+                                checked>
+                            <div class="w-3 h-3 rounded-full bg-[#f59e0b]"></div>
+                            <span class="text-sm font-medium">Other</span>
                         </label>
                     </div>
                 </div>
