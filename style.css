@@ -1,0 +1,125 @@
+/* Custom CSS variables and overrides */
+
+:root {
+  --leaflet-popup-bg: rgba(255, 255, 255, 0.9);
+  --leaflet-popup-text: #1f2937;
+  --leaflet-popup-border: rgba(229, 231, 235, 0.5);
+  --cluster-bg-small: rgba(110, 204, 57, 0.6);
+  --cluster-border-small: rgba(110, 204, 57, 0.5);
+}
+
+.dark {
+  --leaflet-popup-bg: rgba(30, 41, 59, 0.9);
+  --leaflet-popup-text: #f3f4f6;
+  --leaflet-popup-border: rgba(51, 65, 85, 0.5);
+}
+
+/* Glassmorphism Sidebar */
+.sidebar-glass {
+  background: rgba(255, 255, 255, 0.6);
+}
+
+.dark .sidebar-glass {
+  background: rgba(15, 23, 42, 0.6);
+}
+
+/* Leaflet Popup Styling Override for Glassmorphism */
+.leaflet-popup-content-wrapper {
+  background: var(--leaflet-popup-bg);
+  color: var(--leaflet-popup-text);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  border: 1px solid var(--leaflet-popup-border);
+  border-radius: 12px;
+  box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1), 0 8px 10px -6px rgba(0, 0, 0, 0.1);
+  padding: 0;
+}
+
+.leaflet-popup-tip {
+  background: var(--leaflet-popup-bg);
+  box-shadow: none;
+}
+
+.leaflet-popup-content {
+  margin: 14px 16px;
+  line-height: 1.5;
+  font-family: 'Inter', sans-serif;
+}
+
+.leaflet-container a.leaflet-popup-close-button {
+  color: var(--leaflet-popup-text);
+  padding: 8px 8px 0 0;
+}
+
+/* Custom Scrollbar */
+.custom-scrollbar::-webkit-scrollbar {
+  width: 6px;
+}
+
+.custom-scrollbar::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.custom-scrollbar::-webkit-scrollbar-thumb {
+  background: rgba(156, 163, 175, 0.5);
+  border-radius: 10px;
+}
+
+.dark .custom-scrollbar::-webkit-scrollbar-thumb {
+  background: rgba(71, 85, 105, 0.5);
+}
+
+/* Leaflet Control Overrides */
+.leaflet-control-zoom a {
+  background-color: var(--leaflet-popup-bg) !important;
+  color: var(--leaflet-popup-text) !important;
+  border-color: var(--leaflet-popup-border) !important;
+  backdrop-filter: blur(4px);
+}
+
+.leaflet-control-zoom a:hover {
+  background-color: rgba(200, 200, 200, 0.5) !important;
+}
+
+.dark .leaflet-control-zoom a:hover {
+  background-color: rgba(50, 50, 50, 0.5) !important;
+}
+
+/* Fix marker cluster colors for aesthetic */
+.marker-cluster-small {
+  background-color: rgba(59, 130, 246, 0.2);
+}
+
+.marker-cluster-small div {
+  background-color: rgba(59, 130, 246, 0.8);
+  color: white;
+  font-family: 'Inter', sans-serif;
+  font-weight: 600;
+}
+
+.marker-cluster-medium {
+  background-color: rgba(99, 102, 241, 0.2);
+}
+
+.marker-cluster-medium div {
+  background-color: rgba(99, 102, 241, 0.8);
+  color: white;
+  font-family: 'Inter', sans-serif;
+  font-weight: 600;
+}
+
+.marker-cluster-large {
+  background-color: rgba(139, 92, 246, 0.2);
+}
+
+.marker-cluster-large div {
+  background-color: rgba(139, 92, 246, 0.8);
+  color: white;
+  font-family: 'Inter', sans-serif;
+  font-weight: 600;
+}
+
+/* Filter Checkbox Colors override to ensure visibility in dark mode */
+.category-filter:checked {
+  background-color: currentColor;
+}
